@@ -1,0 +1,12 @@
+#!/usr/bin/env -S dbox
+
+DBOX_CONTAINER=node-dev
+DBOX_IMAGE=node:alpine
+DBOX_ENV=(
+    LMSTUDIO_API_URL=http://bacook.local:12345/v1
+    OPENAI_API_BASE=http://bacook.local:12345/v1
+    OPENAI_API_KEY=lm-studio
+)
+DBOX_INIT=(
+    "npm install -g npm@11.13.0"
+)

@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+set -u
+
+# dbox - lightweight Docker sandbox manager
+#
+# Config file format (shell variables):
+#   DBOX_CONTAINER=<name>    # container name (optional)
+#   DBOX_IMAGE=<image>       # Docker image to use
+#   DBOX_DIR=<path>          # host path mounted to /app (optional)
+#   DBOX_ENV=(KEY=val ...)   # optional extra environment variables (optional)
+#   DBOX_INIT=("cmd1" ...)   # optional commands to run after container creation (optional)
+
+# disable Docker CLI hints for cleaner output
+export DOCKER_CLI_HINTS=false
+
+# Default container name if not set use full current directory name without home part converted [a-zA-Z0-9][a-zA-Z0-9_.-]
+DBOX_CONTAINER="${DBOX_CONTAINER:-$(echo "${PWD/#$HOME\//}" | tr -c 'a-zA-Z0-9_.-' '_')}"
+# if DBOX_DIR is not defined, default to current directory
+DBOX_DIR="${DBOX_DIR:-$(pwd)}"
+DBOX_IMAGE="${DBOX_IMAGE:-alpine:latest}"
+
+# Use an array for TTY args to handle word splitting safely
+TTY_ARGS=("-i")
+[[ -t 0 ]] && TTY_ARGS+=("-t")
+
+container_status() {
+    local status
+    if status="$(docker inspect --format '{{.State.Status}}' "$DBOX_CONTAINER" 2>/dev/null)"; then
+        echo "$status"
+    else
+        echo "absent"
+    fi
+}
+
+start() {
+    local status=$(container_status)
+    case "$status" in
+        running)
+            echo "Container is already running: $DBOX_CONTAINER"
+            ;;
+        absent)
+            echo "Creating and starting container: $DBOX_CONTAINER"
+            local env_args=()
+            for e in "${DBOX_ENV[@]+${DBOX_ENV[@]}}"; do
+                env_args+=(-e "$e")
+            done
+            docker run -d --name "$DBOX_CONTAINER" \
+                --net=host  \
+                -v "$DBOX_DIR:$DBOX_DIR" \
+                -v "$HOME/.pi:/root/.pi" \
+                -e PATH=/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+                "${env_args[@]+${env_args[@]}}" \
+                -w "$DBOX_DIR" "$DBOX_IMAGE" sleep infinity
+            for init_cmd in "${DBOX_INIT[@]+${DBOX_INIT[@]}}"; do
+                echo "Running init: $init_cmd"
+                exec_cmd sh -c "$init_cmd"
+            done
+            ;;
+        *)
+            echo "Starting existing container: $DBOX_CONTAINER"
+            docker start "$DBOX_CONTAINER"
+            ;;
+    esac
+}
+
+exec_cmd() {
+    [[ $# -eq 0 ]] && { echo "Error: Command required" >&2; exit 1; }
+    local env_args=()
+    for e in "${DBOX_ENV[@]+${DBOX_ENV[@]}}"; do
+        env_args+=(-e "$e")
+    done
+    docker exec "${TTY_ARGS[@]}" "${env_args[@]+${env_args[@]}}" "$DBOX_CONTAINER" "$@"
+}
+
+stop() {
+    docker stop "$DBOX_CONTAINER" >/dev/null 2>&1 || true
+    echo "Stopped: $DBOX_CONTAINER"
+}
+
+clean() {
+    docker rm -f "$DBOX_CONTAINER" >/dev/null 2>&1 || true
+    echo "Removed container: $DBOX_CONTAINER"
+}
+
+info() {
+    local status=$(container_status)
+    echo "Container: $DBOX_CONTAINER"
+    echo "Status: $status"
+    if [[ "$status" != "absent" ]]; then
+        docker inspect "$DBOX_CONTAINER" --format='
+Image: {{.Config.Image}}
+ID: {{.ID | printf "%.12s"}}
+Created: {{.Created}}
+Mounts:
+{{- range .Mounts}}
+  - {{.Source}} -> {{.Destination}}{{end}}
+Environment:
+{{- range .Config.Env}}
+  - {{.}}{{end}}'
+    fi
+}
+
+usage() {
+    cat <<EOF
+Usage: dbox <config> <command> [args]
+
+Arguments:
+  config       Config file (sets DBOX_CONTAINER, DBOX_IMAGE, etc.)
+
+Commands:
+  start        Create (or restart) the container
+  exec <cmd>   Run a command inside the container
+  info         Show container information
+  stop         Stop the container
+  clean        Remove the container
+EOF
+}
+
+load_config() {
+    local config_file="${1:-}"
+    if [[ -n "$config_file" ]]; then
+        if [[ -f "$config_file" ]]; then
+            source "$config_file"
+        else
+            echo "Error: Config file '$config_file' not found." >&2
+            exit 1
+        fi
+    fi
+
+    # Ensure required configuration variables are set
+    for var in DBOX_CONTAINER DBOX_IMAGE DBOX_DIR; do
+        if [[ -z "${!var:-}" ]]; then
+            echo "Error: $var is not set. Please set it in the environment or a config file." >&2
+            exit 1
+        fi
+        export "$var"
+    done
+}
+
+case "${1:-}" in
+    ""|help|-h|--help) usage; exit 0 ;;
+esac
+
+config_file="$1"; shift
+subcmd="${1:-}"
+[[ -z "$subcmd" ]] && { echo "Error: command required" >&2; usage >&2; exit 1; }
+shift
+
+load_config "$config_file"
+
+case "$subcmd" in
+    start)  start ;;
+    exec)   exec_cmd "$@" ;;
+    info)   info ;;
+    stop)   stop ;;
+    clean)  stop; clean ;;
+    *)
+        echo "Unknown command: $subcmd" >&2
+        usage >&2
+        exit 1
+        ;;
+esac

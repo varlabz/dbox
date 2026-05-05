@@ -1,0 +1,13 @@
+#!/usr/bin/env -S dbox
+
+#DBOX_CONTAINER=python-dev
+DBOX_IMAGE=ghcr.io/astral-sh/uv:python3.14-alpine
+#DBOX_DIR="$(pwd)"
+DBOX_ENV=(
+    LMSTUDIO_API_URL=http://bacook.local:12345/v1
+    OPENAI_API_BASE=http://bacook.local:12345/v1
+    OPENAI_API_KEY=lm-studio
+)
+DBOX_INIT=(
+    "pip install --upgrade pip"
+)
