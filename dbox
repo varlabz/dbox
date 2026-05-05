@@ -46,13 +46,12 @@ start() {
                 env_args+=(-e "$e")
             done
             # take MOUNT entries and convert to -v args
-            local mount_args=()
+            local mount_args=(-v "$DBOX_DIR:$DBOX_DIR")
             for m in "${DBOX_MOUNT[@]+${DBOX_MOUNT[@]}}"; do
                 mount_args+=(-v "$m")
             done
             docker run -d --name "$DBOX_CONTAINER" \
                 --net=host  \
-                -v "$DBOX_DIR:$DBOX_DIR" \
                 "${mount_args[@]+${mount_args[@]}}" \
                 "${env_args[@]+${env_args[@]}}" \
                 -w "$DBOX_DIR" "$DBOX_IMAGE" sleep infinity
