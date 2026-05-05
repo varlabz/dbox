@@ -14,12 +14,6 @@ set -u
 # disable Docker CLI hints for cleaner output
 export DOCKER_CLI_HINTS=false
 
-# Default container name if not set use full current directory name without home part converted [a-zA-Z0-9][a-zA-Z0-9_.-]
-DBOX_CONTAINER="${DBOX_CONTAINER:-$(echo "${PWD/#$HOME\//}" | tr -c 'a-zA-Z0-9_.-' '_')}"
-# if DBOX_DIR is not defined, default to current directory
-DBOX_DIR="${DBOX_DIR:-$(pwd)}"
-DBOX_IMAGE="${DBOX_IMAGE:-alpine:latest}"
-
 # Use an array for TTY args to handle word splitting safely
 TTY_ARGS=("-i")
 [[ -t 0 ]] && TTY_ARGS+=("-t")
@@ -42,20 +36,20 @@ start() {
         absent)
             echo "Creating and starting container: $DBOX_CONTAINER"
             local env_args=()
-            for e in "${DBOX_ENV[@]+${DBOX_ENV[@]}}"; do
+            for e in ${DBOX_ENV[@]+"${DBOX_ENV[@]}"}; do
                 env_args+=(-e "$e")
             done
             # take MOUNT entries and convert to -v args
             local mount_args=(-v "$DBOX_DIR:$DBOX_DIR")
-            for m in "${DBOX_MOUNT[@]+${DBOX_MOUNT[@]}}"; do
+            for m in ${DBOX_MOUNT[@]+"${DBOX_MOUNT[@]}"}; do
                 mount_args+=(-v "$m")
             done
             docker run -d --name "$DBOX_CONTAINER" \
                 --net=host  \
-                "${mount_args[@]+${mount_args[@]}}" \
-                "${env_args[@]+${env_args[@]}}" \
+                "${mount_args[@]}" \
+                ${env_args[@]+"${env_args[@]}"} \
                 -w "$DBOX_DIR" "$DBOX_IMAGE" sleep infinity
-            for init_cmd in "${DBOX_INIT[@]+${DBOX_INIT[@]}}"; do
+            for init_cmd in ${DBOX_INIT[@]+"${DBOX_INIT[@]}"}; do
                 echo "Running init: $init_cmd"
                 exec_cmd sh -c "$init_cmd"
             done
@@ -70,10 +64,10 @@ start() {
 exec_cmd() {
     [[ $# -eq 0 ]] && { echo "Error: Command required" >&2; exit 1; }
     local env_args=()
-    for e in "${DBOX_ENV[@]+${DBOX_ENV[@]}}"; do
+    for e in ${DBOX_ENV[@]+"${DBOX_ENV[@]}"}; do
         env_args+=(-e "$e")
     done
-    docker exec "${TTY_ARGS[@]}" "${env_args[@]+${env_args[@]}}" "$DBOX_CONTAINER" "$@"
+    docker exec "${TTY_ARGS[@]}" ${env_args[@]+"${env_args[@]}"} "$DBOX_CONTAINER" "$@"
 }
 
 stop() {
@@ -131,6 +125,11 @@ load_config() {
         fi
     fi
 
+    # Set default values if not defined (evaluated after sourcing config)
+    DBOX_CONTAINER="${DBOX_CONTAINER:-$(echo "${PWD/#$HOME\//}" | tr -c 'a-zA-Z0-9_.-' '_')}"
+    DBOX_DIR="${DBOX_DIR:-$(pwd)}"
+    DBOX_IMAGE="${DBOX_IMAGE:-alpine:latest}"
+
     # Ensure required configuration variables are set
     for var in DBOX_CONTAINER DBOX_IMAGE DBOX_DIR; do
         if [[ -z "${!var:-}" ]]; then
@@ -157,7 +156,7 @@ case "$subcmd" in
     exec)   exec_cmd "$@" ;;
     info)   info ;;
     stop)   stop ;;
-    clean)  stop; clean ;;
+    clean|rm)  stop; clean ;;
     *)
         echo "Unknown command: $subcmd" >&2
         usage >&2
