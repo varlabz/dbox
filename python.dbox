@@ -1,7 +1,7 @@
-#!/usr/bin/env -S dbox
+#!/usr/bin/env -S dbox -f 
 
 #DBOX_CONTAINER=python-dev
-DBOX_IMAGE=ghcr.io/astral-sh/uv:python3.14-alpine
+DBOX_IMAGE=python:alpine
 #DBOX_DIR="$(pwd)"
 DBOX_ENV=(
     LMSTUDIO_API_URL=http://bacook.local:12345/v1

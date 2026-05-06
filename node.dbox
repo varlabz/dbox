@@ -1,4 +1,4 @@
-#!/usr/bin/env -S dbox
+#!/usr/bin/env -S dbox -f
 
 DBOX_CONTAINER=node-dev
 DBOX_IMAGE=node:alpine

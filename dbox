@@ -100,17 +100,18 @@ Environment:
 
 usage() {
     cat <<EOF
-Usage: dbox <config> <command> [args]
+Usage: dbox [-f <file>] <option> [args]
 
 Arguments:
-  config       Config file (sets DBOX_CONTAINER, DBOX_IMAGE, etc.)
+    file         Config file (sets DBOX_CONTAINER, DBOX_IMAGE, etc.)
 
-Commands:
-  start        Create (or restart) the container
-  exec <cmd>   Run a command inside the container
-  info         Show container information
-  stop         Stop the container
-  clean        Remove the container
+Options:
+    -f, --file <file> Specify a config file; defaults to .dbox in the current directory
+    -s, --start      Create (or restart) the container
+    -e, --exec <cmd> Run a command inside the container
+    -i, --info       Show container information
+    -S, --stop       Stop the container
+    -c, --clean      Remove the container
 EOF
 }
 
@@ -141,25 +142,53 @@ load_config() {
     done
 }
 
-case "${1:-}" in
-    ""|help|-h|--help) usage; exit 0 ;;
-esac
+config_file=""
 
-config_file="$1"; shift
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        help|-h|--help)
+            usage
+            exit 0
+            ;;
+        -f|--file)
+            shift
+            [[ $# -eq 0 ]] && { echo "Error: option '--file' requires a file argument" >&2; usage >&2; exit 1; }
+            config_file="$1"
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            break
+            ;;
+        *)
+            if [[ -z "$config_file" && -f "$1" ]]; then
+                config_file="$1"
+                shift
+                continue
+            fi
+            break
+            ;;
+    esac
+done
+
+config_file="${config_file:-.dbox}"
 subcmd="${1:-}"
-[[ -z "$subcmd" ]] && { echo "Error: command required" >&2; usage >&2; exit 1; }
+[[ -z "$subcmd" ]] && { echo "Error: option required" >&2; usage >&2; exit 1; }
 shift
 
 load_config "$config_file"
 
 case "$subcmd" in
-    start)  start ;;
-    exec)   exec_cmd "$@" ;;
-    info)   info ;;
-    stop)   stop ;;
-    clean|rm)  stop; clean ;;
+    -s|--start)  start ;;
+    -e|--exec)   exec_cmd "$@" ;;
+    -i|--info)   info ;;
+    -S|--stop)   stop ;;
+    -c|--clean)  stop; clean ;;
     *)
-        echo "Unknown command: $subcmd" >&2
+        echo "Unknown option: $subcmd" >&2
         usage >&2
         exit 1
         ;;
