@@ -80,6 +80,16 @@ clean() {
     echo "Removed container: $DBOX_CONTAINER"
 }
 
+auto() {
+    [[ $# -eq 0 ]] && { echo "Error: Command required" >&2; exit 1; }
+    local rc=0
+    start
+    exec_cmd "$@" || rc=$?
+    stop
+    clean
+    return "$rc"
+}
+
 info() {
     local status=$(container_status)
     echo "Container: $DBOX_CONTAINER"
@@ -107,6 +117,7 @@ Arguments:
 
 Options:
     -f, --file <file> Specify a config file; defaults to .dbox in the current directory
+    -a, --auto <cmd> Run start, exec, then clean in sequence
     -s, --start      Create (or restart) the container
     -e, --exec <cmd> Run a command inside the container
     -i, --info       Show container information
@@ -182,6 +193,7 @@ shift
 load_config "$config_file"
 
 case "$subcmd" in
+    -a|--auto)   auto "$@" ;;
     -s|--start)  start ;;
     -e|--exec)   exec_cmd "$@" ;;
     -i|--info)   info ;;
