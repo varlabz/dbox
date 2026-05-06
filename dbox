@@ -126,7 +126,8 @@ load_config() {
     fi
 
     # Set default values if not defined (evaluated after sourcing config)
-    DBOX_CONTAINER="${DBOX_CONTAINER:-$(echo "${PWD/#$HOME\//}" | tr -c 'a-zA-Z0-9_.-' '_')}"
+    DBOX_CONTAINER="${DBOX_CONTAINER:-${PWD/#$HOME\//}}"
+    DBOX_CONTAINER="${DBOX_CONTAINER//[^a-zA-Z0-9_.-]/-}"
     DBOX_DIR="${DBOX_DIR:-$(pwd)}"
     DBOX_IMAGE="${DBOX_IMAGE:-alpine:latest}"
 
