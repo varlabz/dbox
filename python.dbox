@@ -1,4 +1,4 @@
-#!/usr/bin/env -S dbox -f 
+#!/usr/bin/env -S dbox -f
 
 #DBOX_CONTAINER=python-dev
 DBOX_IMAGE=python:alpine

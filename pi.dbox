@@ -1,0 +1,13 @@
+#!/usr/bin/env -S dbox -f
+
+DBOX_IMAGE="node:alpine"
+DBOX_MOUNT=(
+    "$HOME/.pi:/root/.pi"
+)
+DBOX_ENV=(
+)
+DBOX_INIT=(
+    "apk add --no-cache curl git bash"
+    "npm install -g npm@latest"
+    "npm install -g @mariozechner/pi-coding-agent"
+)

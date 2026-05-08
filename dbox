@@ -6,10 +6,10 @@ set -u
 # Config file format (shell variables):
 #   DBOX_CONTAINER=<name>    # container name (optional)
 #   DBOX_IMAGE=<image>       # Docker image to use
-#   DBOX_DIR=<path>          # host path mounted to /app (optional)
+#   DBOX_DIR=<path>          # host path mounted (optional)
 #   DBOX_ENV=(KEY=val ...)   # optional extra environment variables (optional)
 #   DBOX_INIT=("cmd1" ...)   # optional commands to run after container creation (optional)
-#   DBOX_MOUNT=("host_path:container_path" ...) # optional extra mounts (optional)   
+#   DBOX_MOUNT=("host_path:container_path" ...) # optional extra mounts (optional)
 
 # disable Docker CLI hints for cleaner output
 export DOCKER_CLI_HINTS=false
@@ -95,16 +95,21 @@ info() {
     echo "Container: $DBOX_CONTAINER"
     echo "Status: $status"
     if [[ "$status" != "absent" ]]; then
-        docker inspect "$DBOX_CONTAINER" --format='
+        local sizes
+        sizes=$(docker inspect "$DBOX_CONTAINER" --size --format='{{.SizeRootFs}} {{.SizeRw}}')
+        local size_root_mb=$(( ${sizes%% *} / 1024 / 1024 ))
+        local size_rw_mb=$(( ${sizes##* } / 1024 / 1024 ))
+        docker inspect "$DBOX_CONTAINER" --format="
 Image: {{.Config.Image}}
-ID: {{.ID | printf "%.12s"}}
+ID: {{.ID | printf \"%.12s\"}}
 Created: {{.Created}}
+Size: ${size_root_mb} MB (${size_rw_mb} MB writable)
 Mounts:
 {{- range .Mounts}}
   - {{.Source}} -> {{.Destination}}{{end}}
 Environment:
 {{- range .Config.Env}}
-  - {{.}}{{end}}'
+  - {{.}}{{end}}"
     fi
 }
 
@@ -138,8 +143,11 @@ load_config() {
     fi
 
     # Set default values if not defined (evaluated after sourcing config)
-    DBOX_CONTAINER="${DBOX_CONTAINER:-${PWD/#$HOME\//}}"
-    DBOX_CONTAINER="${DBOX_CONTAINER//[^a-zA-Z0-9_.-]/-}"
+    # if DBOX_CONTAINER is not set, default to sanitized current directory name
+    [[ -z "${DBOX_CONTAINER:-}" ]] &&
+        DBOX_CONTAINER="${DBOX_CONTAINER:-${PWD/#$HOME\//}}" && 
+        DBOX_CONTAINER="${DBOX_CONTAINER//[^a-zA-Z0-9_.-]/-}" &&
+        DBOX_CONTAINER="${DBOX_CONTAINER##[-.]}"
     DBOX_DIR="${DBOX_DIR:-$(pwd)}"
     DBOX_IMAGE="${DBOX_IMAGE:-alpine:latest}"
 
