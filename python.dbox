@@ -1,13 +1,6 @@
 #!/usr/bin/env -S dbox -f
 
-#DBOX_CONTAINER=python-dev
 DBOX_IMAGE=python:alpine
-#DBOX_DIR="$(pwd)"
-DBOX_ENV=(
-    LMSTUDIO_API_URL=http://bacook.local:12345/v1
-    OPENAI_API_BASE=http://bacook.local:12345/v1
-    OPENAI_API_KEY=lm-studio
-)
 DBOX_INIT=(
     "pip install --upgrade pip"
 )

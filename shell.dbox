@@ -1,6 +1,5 @@
 #!/usr/bin/env -S dbox -f
 
-# run minimum set
 DBOX_INIT=(
     "apk add --no-cache bash curl jq"
 )

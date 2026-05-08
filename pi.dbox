@@ -4,8 +4,6 @@ DBOX_IMAGE="node:alpine"
 DBOX_MOUNT=(
     "$HOME/.pi:/root/.pi"
 )
-DBOX_ENV=(
-)
 DBOX_INIT=(
     "apk add --no-cache curl git bash"
     "npm install -g npm@latest"

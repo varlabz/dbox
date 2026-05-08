@@ -33,17 +33,6 @@ The included presets target:
 - Minimal shell utilities (`shell.dbox`)
 - PI coding agent setup (`pi.dbox`)
 
-## Repository Layout
-
-```text
-dbox/
-├── dbox          # core manager script
-├── node.dbox     # Node preset
-├── python.dbox   # Python preset
-├── shell.dbox    # Minimal shell/tools preset
-└── pi.dbox       # PI agent preset with ~/.pi mount
-```
-
 ## Requirements
 
 - Docker installed and running.
@@ -56,30 +45,24 @@ Optional but recommended:
 
 ## Quick Start
 
-1. Make scripts executable (one time):
-
-```bash
-chmod +x dbox *.dbox
-```
-
-2. Ensure the directory you run in has a `.dbox` (or use one of the provided `*.dbox` preset files).
+1. Ensure the directory you run in has a `.dbox` (or use one of the provided `*.dbox` preset files).
 
 - This is critical for safe usage.
 - Treat the presence of `.dbox` as an explicit opt-in that the directory is allowed to run inside Docker.
 
-3. Start a container using a preset:
+2. Start a container using a preset:
 
 ```bash
 ./node.dbox --start
 ```
 
-4. Execute a command inside it:
+3. Execute a command inside it:
 
 ```bash
 ./node.dbox --exec node --version
 ```
 
-5. Stop and remove it:
+4. Stop and remove it:
 
 ```bash
 ./node.dbox --clean
@@ -122,7 +105,7 @@ Supported options:
 - `-f, --file <file>`: load config from file (defaults to `.dbox` in current directory)
 - `-s, --start`: create/start container
 - `-e, --exec <cmd...>`: execute command in running container
-- `-a, --auto <cmd...>`: start -> exec -> stop -> clean in one call
+- `-a, --auto <cmd...>`: start → exec → stop → clean in one call
 - `-i, --info`: show container details
 - `-S, --stop`: stop container
 - `-c, --clean`: stop and remove container
@@ -158,9 +141,7 @@ Each `*.dbox` file is a shell script that sets variables consumed by `dbox`.
 ### node.dbox
 
 - Image: `node:alpine`
-- Container name: `node-dev`
-- Sets LM Studio/OpenAI-compatible environment variables
-- Upgrades npm to `11.13.0` on first create
+- Init: upgrades npm to latest
 
 Example:
 
@@ -174,8 +155,7 @@ Example:
 ### python.dbox
 
 - Image: `python:alpine`
-- Sets LM Studio/OpenAI-compatible environment variables
-- Upgrades pip on first create
+- Init: upgrades pip to latest
 
 Example:
 
@@ -188,8 +168,8 @@ Example:
 
 ### shell.dbox
 
-- Uses default image (currently `alpine:latest` via `dbox` default)
-- Installs minimal shell tools: `bash`, `curl`, `jq`
+- Image: `alpine:latest` (default)
+- Init: installs `bash`, `curl`, `jq`
 
 Example:
 
@@ -202,14 +182,14 @@ Example:
 ### pi.dbox
 
 - Image: `node:alpine`
-- Mounts local `~/.pi` to `/root/.pi`
-- Installs `@mariozechner/pi-coding-agent`
+- Mounts `~/.pi` to `/root/.pi`
+- Init: installs `curl`, `git`, `bash`; upgrades npm; installs `@mariozechner/pi-coding-agent`
 
 Example:
 
 ```bash
 ./pi.dbox --start
-./pi.dbox --exec pi-coding-agent --help
+./pi.dbox --exec pi --help
 ./pi.dbox --clean
 ```
 
@@ -254,6 +234,8 @@ Open a long-lived dev container session:
 ./node.dbox --start
 ./node.dbox --exec sh
 # ...work interactively...
+./node.dbox --stop
+# can start again or clean to remove container
 ./node.dbox --clean
 ```
 
@@ -282,3 +264,4 @@ Inspect container details:
 
 - Docker permission issues
   - Verify Docker daemon is running and your user can run Docker commands.
+  - Verify permission to shared directories. Docker -> Settings -> Resources -> File sharing
