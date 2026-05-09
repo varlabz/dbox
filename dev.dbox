@@ -1,0 +1,22 @@
+#!/usr/bin/env -S dbox -f
+
+DBOX_IMAGE=alpine:latest
+DBOX_INIT=(
+    "apk add --no-cache \
+    bash \
+    build-base \
+    gcc \
+    g++ \
+    make \
+    cmake \
+    git \
+    curl \
+    wget \
+    python3 \
+    py3-pip \
+    nodejs \
+    npm \
+    openssl-dev \
+    libffi-dev"
+    "npm install -g npm@latest"
+)

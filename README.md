@@ -2,75 +2,78 @@
 
 Lightweight Docker sandbox manager for repeatable local dev shells.
 
-This project provides:
+`dbox` is a tiny Bash runner for creating disposable, shell-driven Docker sandboxes with project-scoped configuration. It is designed to help you:
 
-- A small Bash runner (`dbox`) that manages container lifecycle for ad-hoc dev environments.
-- File-based environment presets (`*.dbox`) you can execute directly.
-- A simple, shell-native configuration model (variables and arrays) instead of heavy YAML or compose files.
+- launch a local development container quickly
+- mount the current project into the container
+- inject environment variables or extra mounts
+- run one-time init commands when the sandbox is created
+- execute commands interactively or in batch
+- clean up containers cleanly when finished
 
-## What This Project Does
+## Why this project exists
 
-`dbox` creates and controls single-purpose Docker containers for development tasks. It is designed for fast, disposable workflows:
+Modern local development often needs containers, but full Docker Compose stacks are heavy for simple tasks. `dbox` exists to provide:
 
-- Start a container from a chosen image.
-- Mount your current project directory into the container.
-- Optionally inject env vars and extra volume mounts.
-- Optionally run one-time init commands (package installs, tool setup).
-- Execute commands interactively.
-- Stop and clean the container when done.
+- a minimalist workflow for ad-hoc and long-lived dev shells
+- shell-native config instead of bulky YAML or Compose files
+- a reproducible, repeatable way to run project-specific tooling inside Docker
 
-Important safety model:
+## What problem it solves
 
-- A local `.dbox` file in the directory is the critical safety gate.
-- It proves you are intentionally running `dbox` for that directory/project.
-- It avoids accidentally using default behavior from the wrong folder.
-- It keeps image, mounts, env, and init commands scoped to where you run.
+`dbox` solves the friction of running Docker-based development environments while avoiding accidental or unsafe projects:
 
-The included presets target:
+- no more manual `docker run` commands for every project
+- no need to learn or maintain Docker Compose for simple shells
+- reduces risk of running the wrong image in the wrong directory
+- makes local container workflows fast, repeatable, and easy to document
+- keeps agents and tooling isolated from the host system and from other projects
 
-- Node development (`node.dbox`)
-- Python development (`python.dbox`)
-- Minimal shell utilities (`shell.dbox`)
-- PI coding agent setup (`pi.dbox`)
+## How it works
+
+`dbox` loads a config file (`.dbox` by default) and uses shell variables to define a sandbox environment.
+
+The runner then:
+
+1. determines the container name, image, and project directory
+2. creates or starts the container
+3. mounts the current project directory into the container
+4. optionally applies extra env vars and volume mounts
+5. optionally runs init commands once when the container is first created
+6. executes commands inside the container, or stops/removes the container
+
+### Config file model
+
+Each `.dbox` or `*.dbox` file is just a Bash-style script that sets variables such as:
+
+- `DBOX_IMAGE`
+- `DBOX_CONTAINER`
+- `DBOX_DIR`
+- `DBOX_ENV`
+- `DBOX_MOUNT`
+- `DBOX_INIT`
+
+This keeps the configuration small, readable, and editable with standard shell syntax.
 
 ## Requirements
 
-- Docker installed and running.
-- Bash (the runner is a Bash script).
-- Permission to run Docker commands on your machine.
-
-Optional but recommended:
-
-- Add the project directory to your `PATH`, or call `./dbox` directly.
+- Docker installed and running
+- Bash available to execute the `dbox` runner
+- Permission to run Docker commands on your machine
 
 ## Quick Start
 
-1. Ensure the directory you run in has a `.dbox` (or use one of the provided `*.dbox` preset files).
-
-- This is critical for safe usage.
-- Treat the presence of `.dbox` as an explicit opt-in that the directory is allowed to run inside Docker.
-
-2. Start a container using a preset:
+### 1. Use a preset
 
 ```bash
 ./node.dbox --start
-```
-
-3. Execute a command inside it:
-
-```bash
 ./node.dbox --exec node --version
-```
-
-4. Stop and remove it:
-
-```bash
 ./node.dbox --clean
 ```
 
-## Fastest Default Setup (Empty .dbox)
+### 2. Use an empty `.dbox`
 
-If you want the simplest possible setup in a directory, create an empty `.dbox` file and use defaults.
+If you just want a default sandbox for the current directory:
 
 ```bash
 touch .dbox
@@ -79,69 +82,71 @@ touch .dbox
 ./dbox --clean
 ```
 
-What defaults this uses:
+Defaults when `.dbox` is empty:
 
 - `DBOX_IMAGE=alpine:latest`
 - `DBOX_DIR=$(pwd)`
-- `DBOX_CONTAINER` generated from the current path
-- No extra env vars, mounts, or init commands
+- `DBOX_CONTAINER` derived from the current path
+- no extra env vars, mounts, or init commands
 
-This is the fastest safe path for ad-hoc usage because the directory still has an explicit `.dbox` trust marker.
+### 3. Run a one-shot command
 
-Note: `.dbox` only needs execute permissions when you intend to run it directly (for example `./.dbox --start`).
+```bash
+./dbox --auto sh -lc "echo Hello from dbox"
+```
 
-## Command Reference
-
-Run help:
+## Command reference
 
 ```bash
 ./dbox --help
 ```
 
-Aliases: `-h`, `--help`, and `help`.
+Available options:
 
-Supported options:
-
-- `-f, --file <file>`: load config from file (defaults to `.dbox` in current directory)
-- `-s, --start`: create/start container
-- `-e, --exec <cmd...>`: execute command in running container
-- `-a, --auto <cmd...>`: start → exec → stop → clean in one call
+- `-f, --file <file>`: load config from a file (defaults to `.dbox`)
+- `-s, --start`: create or start the container
+- `-e, --exec <cmd...>`: execute a command inside the container
+- `-a, --auto <cmd...>`: start, exec, stop, and clean in one call
 - `-i, --info`: show container details
-- `-S, --stop`: stop container
-- `-c, --clean`: stop and remove container
+- `-S, --stop`: stop the container
+- `-c, --clean`: stop and remove the container
 
-## Configuration Reference
+## Configuration reference
 
-Each `*.dbox` file is a shell script that sets variables consumed by `dbox`.
+### Core variables
 
-### Core Variables
-
-- `DBOX_IMAGE` (default: `alpine:latest`)
+- `DBOX_IMAGE`
   - Docker image used for the sandbox.
+  - Default: `alpine:latest`
 
-- `DBOX_CONTAINER` (default: sanitized current path)
-  - Container name. If omitted, generated from current working directory and normalized for Docker-safe naming.
+- `DBOX_CONTAINER`
+  - Name of the Docker container.
+  - Default: derived from the current working directory and normalized for Docker-safe naming.
 
-- `DBOX_DIR` (default: current working directory)
-  - Working directory mounted into the container at the same absolute path.
+- `DBOX_DIR`
+  - Host directory mounted into the container.
+  - Default: current working directory.
 
-### Optional Variables
+### Optional variables
 
 - `DBOX_ENV=(KEY=value ...)`
   - Extra environment variables passed to `docker run` and `docker exec`.
 
 - `DBOX_MOUNT=("host_path:container_path" ...)`
-  - Additional volume mounts besides the default project mount.
+  - Additional host volume mounts beyond the default project mount.
 
 - `DBOX_INIT=("cmd1" "cmd2" ...)`
-  - Init commands executed once when a container is first created.
+  - One-time init commands executed when the container is first created.
+  - Commands are not re-run on subsequent starts.
 
-## Included Presets
+## Included presets
 
-### node.dbox
+These preset files show common sandbox configurations.
 
-- Image: `node:alpine`
-- Init: upgrades npm to latest
+### `node.dbox`
+
+- Base image: `node:alpine`
+- Init commands: upgrade npm
 
 Example:
 
@@ -152,10 +157,10 @@ Example:
 ./node.dbox --clean
 ```
 
-### python.dbox
+### `python.dbox`
 
-- Image: `python:alpine`
-- Init: upgrades pip to latest
+- Base image: `python:alpine`
+- Init commands: upgrade pip
 
 Example:
 
@@ -166,10 +171,10 @@ Example:
 ./python.dbox --clean
 ```
 
-### shell.dbox
+### `shell.dbox`
 
-- Image: `alpine:latest` (default)
-- Init: installs `bash`, `curl`, `jq`
+- Base image: `alpine:latest`
+- Init commands: install `bash`, `curl`, `jq`
 
 Example:
 
@@ -179,11 +184,11 @@ Example:
 ./shell.dbox --clean
 ```
 
-### pi.dbox
+### `pi.dbox`
 
-- Image: `node:alpine`
-- Mounts `~/.pi` to `/root/.pi`
-- Init: installs `curl`, `git`, `bash`; upgrades npm; installs `@mariozechner/pi-coding-agent`
+- Base image: `node:alpine`
+- Extra mount: `~/.pi` into `/root/.pi`
+- Init commands: install `curl`, `git`, `bash`, upgrade npm, install `@mariozechner/pi-coding-agent`
 
 Example:
 
@@ -193,9 +198,30 @@ Example:
 ./pi.dbox --clean
 ```
 
-## Custom Configuration Example
+### `dev.dbox`
 
-Create your own `.dbox` file:
+A simple dev sandbox that can be customized for additional tooling and mounts.
+
+## Image size examples
+
+The images used by `dbox` are intentionally lightweight. For example:
+
+- `alpine:latest` is typically under 10 MB
+- `node:alpine` is often around 150 MB
+- `python:alpine` is often around 120 MB
+
+## Build a new sandbox
+
+To create a new sandbox preset or project-specific `.dbox`:
+
+1. Choose a base image.
+2. Set `DBOX_CONTAINER` if you want a stable name.
+3. Set `DBOX_DIR` only if you want a different working directory.
+4. Add `DBOX_ENV` values for environment variables.
+5. Add `DBOX_MOUNT` entries for extra volume mounts.
+6. Add `DBOX_INIT` commands for setup steps.
+
+Example `rust.dbox`:
 
 ```bash
 #!/usr/bin/env -S dbox -f
@@ -213,55 +239,53 @@ DBOX_INIT=(
 )
 ```
 
-Then run:
+Then:
 
 ```bash
-chmod +x .dbox
-./.dbox --auto cargo --version
+chmod +x rust.dbox
+./rust.dbox --auto cargo --version
 ```
 
-## Typical Workflows
+## Typical workflows
 
-Run a single command in a disposable environment:
+Run a disposable command in a container and clean up automatically:
 
 ```bash
 ./python.dbox --auto python -m pip list
 ```
 
-Open a long-lived dev container session:
+Open a long-lived shell for interactive work:
 
 ```bash
 ./node.dbox --start
 ./node.dbox --exec sh
 # ...work interactively...
 ./node.dbox --stop
-# can start again or clean to remove container
 ./node.dbox --clean
 ```
 
-Inspect container details:
+Inspect the sandbox state:
 
 ```bash
 ./node.dbox --info
 ```
 
-## Notes and Behavior
+## Behavior notes
 
-- Container networking uses host mode (`--net=host`).
 - The project directory is always mounted into the container.
-- `DBOX_INIT` runs only when creating a new container, not every start.
-- `--clean` performs stop and remove.
-- `--clean` is idempotent and safe to run even if the container does not exist.
-- Keeping a `.dbox` file in each project directory is strongly recommended as a protection mechanism and explicit trust boundary.
+- Containers use host networking (`--net=host`).
+- `DBOX_INIT` is only executed once on first creation.
+- `--clean` is safe to run even if the container does not exist.
+- A `.dbox` file in the current directory is the explicit trust boundary for safe execution.
 
 ## Troubleshooting
 
-- "Config file not found"
-  - Ensure `--file` path is correct, or create a `.dbox` in current directory.
+- `Config file not found`
+  - Verify the config file path or create a `.dbox` in the current directory.
 
-- "Container is already running"
-  - This is informational; use `--exec` directly or `--clean` to recreate.
+- `Container is already running`
+  - This message is informational. Use `--exec` to run commands or `--clean` to recreate the container.
 
 - Docker permission issues
-  - Verify Docker daemon is running and your user can run Docker commands.
-  - Verify permission to shared directories. Docker -> Settings -> Resources -> File sharing
+  - Check that Docker is running and your user can execute Docker commands.
+  - Verify file sharing settings for mounted directories if using Docker Desktop.
