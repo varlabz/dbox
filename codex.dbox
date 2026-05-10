@@ -1,0 +1,11 @@
+#!/usr/bin/env -S dbox -f
+
+DBOX_IMAGE="node:alpine"
+DBOX_MOUNT=(
+    "$HOME/.codex:/root/.codex"
+)
+DBOX_INIT=(
+    "apk add --no-cache curl git bash"
+    "npm install -g npm@latest"
+    "npm install -g @openai/codex@latest"
+)

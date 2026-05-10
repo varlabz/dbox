@@ -1,0 +1,14 @@
+#!/usr/bin/env -S dbox -f
+
+DBOX_IMAGE="node:alpine"
+DBOX_MOUNT=(
+    "$HOME/.opencode:/root/.opencode"
+)
+DBOX_ENV=(
+    PATH="/root/.opencode/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+)
+DBOX_INIT=(
+    "apk add --no-cache curl git bash"
+    "npm install -g npm@latest"
+    "curl -fsSL https://opencode.ai/install | bash"
+)
