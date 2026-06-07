@@ -47,7 +47,7 @@ start() {
                 mount_args+=(-v "$m")
             done
             docker run -d --name "$DBOX_CONTAINER" \
-                "${DBOX_PARAM}"
+                ${DBOX_PARAM:-} \
                 "${mount_args[@]}" \
                 ${env_args[@]+"${env_args[@]}"} \
                 -w "$DBOX_DIR" "$DBOX_IMAGE" sleep infinity
