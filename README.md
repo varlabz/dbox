@@ -51,6 +51,7 @@ Each `.dbox` or `*.dbox` file is just a Bash-style script that sets variables su
 - `DBOX_DIR`
 - `DBOX_ENV`
 - `DBOX_MOUNT`
+- `DBOX_PARAM`
 - `DBOX_INIT`
 
 This keeps the configuration small, readable, and editable with standard shell syntax.
@@ -65,6 +66,8 @@ This keeps the configuration small, readable, and editable with standard shell s
 
 ### 1. Use a preset
 
+copy preset in your project directory and run
+
 ```bash
 ./node.dbox --start
 ./node.dbox --exec node --version
@@ -77,9 +80,9 @@ If you just want a default sandbox for the current directory:
 
 ```bash
 touch .dbox
-./dbox --start
-./dbox --exec sh -lc "pwd && ls -la"
-./dbox --clean
+dbox --start
+dbox --exec sh -lc "pwd && ls -la"
+dbox --clean
 ```
 
 Defaults when `.dbox` is empty:
@@ -92,18 +95,18 @@ Defaults when `.dbox` is empty:
 ### 3. Run a one-shot command
 
 ```bash
-./dbox --auto sh -lc "echo Hello from dbox"
+dbox --auto sh -lc "echo Hello from dbox"
 ```
 
 ## Command reference
 
 ```bash
-./dbox --help
+dbox --help
 ```
 
 Available options:
 
-- `-f, --file <file>`: load config from a file (defaults to `.dbox`)
+- `-f, --file <file>`: load config from a file (defaults to `.dbox` in the current directory)
 - `-s, --start`: create or start the container
 - `-e, --exec <cmd...>`: execute a command inside the container
 - `-a, --auto <cmd...>`: start, exec, stop, and clean in one call
@@ -121,7 +124,7 @@ Available options:
 
 - `DBOX_CONTAINER`
   - Name of the Docker container.
-  - Default: derived from the current working directory and normalized for Docker-safe naming.
+  - Default: derived from the current working directory, sanitized for Docker-safe naming (slashes and special characters become hyphens, leading dots/hyphens removed).
 
 - `DBOX_DIR`
   - Host directory mounted into the container.
@@ -134,6 +137,9 @@ Available options:
 
 - `DBOX_MOUNT=("host_path:container_path" ...)`
   - Additional host volume mounts beyond the default project mount.
+
+- `DBOX_PARAM`
+  - Extra parameters passed directly to `docker run`. For example, `--privileged` or `--cap-add=SYS_ADMIN` or `--network=host --detach`
 
 - `DBOX_INIT=("cmd1" "cmd2" ...)`
   - One-time init commands executed when the container is first created.
@@ -188,7 +194,7 @@ Example:
 
 - Base image: `node:alpine`
 - Extra mount: `~/.pi` into `/root/.pi`
-- Init commands: install `curl`, `git`, `bash`, upgrade npm, install `@mariozechner/pi-coding-agent`
+- Init commands: install `curl`, `git`, `bash`, upgrade npm, install `@earendil-works/pi-coding-agent`
 
 Example:
 
@@ -201,6 +207,21 @@ Example:
 ### `dev.dbox`
 
 A simple dev sandbox that can be customized for additional tooling and mounts.
+
+## Example: using `DBOX_PARAM`
+
+Use `DBOX_PARAM` to pass extra Docker flags, such as enabling privileged mode or adding capabilities:
+
+```bash
+#!/usr/bin/env -S dbox -f
+
+DBOX_CONTAINER=my-privileged-dev
+DBOX_IMAGE=ubuntu:latest
+DBOX_PARAM=--privileged
+DBOX_INIT=(
+  "apt-get update && apt-get install -y curl git"
+)
+```
 
 ## Image size examples
 
@@ -218,8 +239,9 @@ To create a new sandbox preset or project-specific `.dbox`:
 2. Set `DBOX_CONTAINER` if you want a stable name.
 3. Set `DBOX_DIR` only if you want a different working directory.
 4. Add `DBOX_ENV` values for environment variables.
-5. Add `DBOX_MOUNT` entries for extra volume mounts.
-6. Add `DBOX_INIT` commands for setup steps.
+5. Set `DBOX_PARAM` for extra Docker run flags.
+6. Add `DBOX_MOUNT` entries for extra volume mounts.
+7. Add `DBOX_INIT` commands for setup steps.
 
 Example `rust.dbox`:
 
@@ -257,11 +279,12 @@ Run a disposable command in a container and clean up automatically:
 Open a long-lived shell for interactive work:
 
 ```bash
-./node.dbox --start
-./node.dbox --exec sh
+./node.dbox --start      # create and start the container
+./node.dbox --exec sh    # open an interactive shell
 # ...work interactively...
-./node.dbox --stop
-./node.dbox --clean
+./node.dbox --stop      # stop the container and keep its data
+# can start again and can continue working from where you left off
+./node.dbox --clean     # remove the container and its data
 ```
 
 Inspect the sandbox state:
@@ -273,7 +296,6 @@ Inspect the sandbox state:
 ## Behavior notes
 
 - The project directory is always mounted into the container.
-- Containers use host networking (`--net=host`).
 - `DBOX_INIT` is only executed once on first creation.
 - `--clean` is safe to run even if the container does not exist.
 - A `.dbox` file in the current directory is the explicit trust boundary for safe execution.

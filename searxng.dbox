@@ -11,16 +11,10 @@
 #   DBOX_ENV=(KEY=val ...)   # optional extra environment variables (optional)
 #   DBOX_INIT=("cmd1" ...)   # optional commands to run after container creation (optional)
 
-DBOX_IMAGE="node:alpine"
-DBOX_MOUNT=(
-    "$HOME/.opencode:/root/.opencode"
-)
-DBOX_ENV=(
-    PATH="/root/.opencode/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-)
+DBOX_CONTAINER=searxng
+DBOX_IMAGE=ghcr.io/astral-sh/uv:alpine
 DBOX_INIT=(
     "apk update --no-cache"
-    "apk add --no-cache curl git bash"
-    "npm install -g npm@latest"
-    "curl -fsSL https://opencode.ai/install | bash"
+    "apk add --no-cache bash git"
+    "uv tool install git+https://github.com/varlabz/searxng-mcp"
 )
