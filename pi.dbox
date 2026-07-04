@@ -13,7 +13,7 @@
 
 DBOX_IMAGE="node:alpine"
 DBOX_MOUNT=(
-    "$HOME/.pi:/root/.pi"
+    "$HOME/.pi:/root/.pi:rw"
 )
 DBOX_INIT=(
     "apk update --no-cache"

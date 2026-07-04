@@ -13,7 +13,7 @@
 
 DBOX_IMAGE="node:alpine"
 DBOX_MOUNT=(
-    "$HOME/.claude:/root/.claude"
+    "$HOME/.claude:/root/.claude:rw"
 )
 DBOX_ENV=(
     PATH="/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
