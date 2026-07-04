@@ -13,7 +13,7 @@
 
 DBOX_IMAGE="node:alpine"
 DBOX_MOUNT=(
-    "$HOME/.opencode:/root/.opencode"
+    "$HOME/.opencode:/root/.opencode:rw"
 )
 DBOX_ENV=(
     PATH="/root/.opencode/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
