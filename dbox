@@ -152,6 +152,7 @@ load_config() {
         DBOX_CONTAINER="${DBOX_CONTAINER##[-.]}"
     DBOX_DIR="${DBOX_DIR:-$(pwd)}"
     DBOX_IMAGE="${DBOX_IMAGE:-alpine:latest}"
+    DBOX_PARAM="${DBOX_PARAM:---net host}"
 
     # Ensure required configuration variables are set
     for var in DBOX_CONTAINER DBOX_IMAGE DBOX_DIR; do
