@@ -84,7 +84,6 @@ clean() {
 }
 
 auto() {
-    [[ $# -eq 0 ]] && { echo "Error: Command required" >&2; exit 1; }
     local rc=0
     start
     exec_cmd "$@" || rc=$?
