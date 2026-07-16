@@ -53,6 +53,7 @@ Each `.dbox` or `*.dbox` file is just a Bash-style script that sets variables su
 - `DBOX_MOUNT`
 - `DBOX_PARAM`
 - `DBOX_INIT`
+- `DBOX_EXEC`
 
 This keeps the configuration small, readable, and editable with standard shell syntax.
 
@@ -144,6 +145,10 @@ Available options:
 - `DBOX_INIT=("cmd1" "cmd2" ...)`
   - One-time init commands executed when the container is first created.
   - Commands are not re-run on subsequent starts.
+
+- `DBOX_EXEC=<cmd>`
+  - Default command for `dbox --exec` when no command is provided.
+  - Example: `DBOX_EXEC=npm start` allows `dbox --exec` to run `npm start` by default.
 
 ## Included presets
 
