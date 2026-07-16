@@ -25,3 +25,4 @@ DBOX_INIT=(
     "npm install -g npm@latest"
     "curl -fsSL https://opencode.ai/install | bash"
 )
+DBOX_EXEC="opencode --yolo"

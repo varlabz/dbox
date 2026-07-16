@@ -22,3 +22,4 @@ DBOX_INIT=(
     "npm install -g npm@latest"
     "npm install -g @openai/codex@latest"
 )
+DBOX_EXEC="codex"

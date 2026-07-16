@@ -19,3 +19,4 @@ DBOX_INIT=(
     "apk add --no-cache bash git"
     "uv tool install git+https://github.com/varlabz/searxng-mcp"
 )
+DBOX_EXEC="uv run mcp-server"

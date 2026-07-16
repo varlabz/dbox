@@ -17,4 +17,4 @@ DBOX_INIT=(
     "apk update --no-cache"
     "pip install --upgrade pip"
 )
-DBOX_EXEC="bash"
+DBOX_EXEC="python"

@@ -25,3 +25,4 @@ DBOX_INIT=(
     "npm install -g npm@latest"
     "curl -fsSL https://claude.ai/install.sh | bash"
 )
+DBOX_EXEC="claude"

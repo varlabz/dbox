@@ -22,3 +22,4 @@ DBOX_ENV=(
 DBOX_INIT=(
     "curl -fsSL https://antigravity.google/cli/install.sh | bash"
 )
+DBOX_EXEC="agy --dangerously-skip-permissions"

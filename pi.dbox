@@ -22,4 +22,4 @@ DBOX_INIT=(
     "npm install -g npm@latest"
     "npm install -g @earendil-works/pi-coding-agent"
 )
-DBOX_EXEC="bash"
+DBOX_EXEC="pi"
