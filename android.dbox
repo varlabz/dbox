@@ -10,6 +10,7 @@
 #   DBOX_PARAM=              # optional extra Docker run parameters (optional).
 #   DBOX_ENV=(KEY=val ...)   # optional extra environment variables (optional)
 #   DBOX_INIT=("cmd1" ...)   # optional commands to run after container creation (optional)
+#   DBOX_EXEC=<cmd>          # default command for `dbox -e` with no args (optional)
 
 DBOX_IMAGE="alvrme/alpine-android:android-36.1-jdk17"
 DBOX_INIT=(

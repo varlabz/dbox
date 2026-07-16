@@ -10,6 +10,7 @@
 #   DBOX_PARAM=              # optional extra Docker run parameters (optional).
 #   DBOX_ENV=(KEY=val ...)   # optional extra environment variables (optional)
 #   DBOX_INIT=("cmd1" ...)   # optional commands to run after container creation (optional)
+#   DBOX_EXEC=<cmd>          # default command for `dbox -e` with no args (optional)
 
 DBOX_IMAGE="node:alpine"
 DBOX_MOUNT=(
@@ -21,3 +22,4 @@ DBOX_INIT=(
     "npm install -g npm@latest"
     "npm install -g @earendil-works/pi-coding-agent"
 )
+DBOX_EXEC="bash"
