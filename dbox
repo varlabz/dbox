@@ -12,6 +12,7 @@ set -u
 #   DBOX_PARAM=              # optional extra Docker run parameters (optional).
 #   DBOX_ENV=(KEY=val ...)   # optional extra environment variables (optional)
 #   DBOX_INIT=("cmd1" ...)   # optional commands to run after container creation (optional)
+#   DBOX_EXEC=<cmd>          # default command for `dbox -e` with no args (optional)
 
 # disable Docker CLI hints for cleaner output
 export DOCKER_CLI_HINTS=false
@@ -64,7 +65,7 @@ start() {
 }
 
 exec_cmd() {
-    [[ $# -eq 0 ]] && { echo "Error: Command required" >&2; exit 1; }
+    [[ $# -eq 0 ]] && { [[ -n "${DBOX_EXEC:-}" ]] && eval "set -- $DBOX_EXEC" || { echo "Error: Command required" >&2; exit 1; }; }
     local env_args=()
     for e in ${DBOX_ENV[@]+"${DBOX_ENV[@]}"}; do
         env_args+=(-e "$e")
@@ -123,13 +124,13 @@ Arguments:
     file         Config file (sets DBOX_CONTAINER, DBOX_IMAGE, etc.)
 
 Options:
-    -f, --file <file> Specify a config file; defaults to .dbox in the current directory
-    -a, --auto <cmd> Run start, exec, then clean in sequence
-    -s, --start      Create (or restart) the container
-    -e, --exec <cmd> Run a command inside the container
-    -i, --info       Show container information
-    -S, --stop       Stop the container
-    -c, --clean      Remove the container
+    -f, --file <file>   Specify a config file; defaults to .dbox in the current directory
+    -a, --auto [cmd]    Run start, exec, then clean in sequence
+    -s, --start         Create (or restart) the container
+    -e, --exec [cmd]    Run a command inside the container (uses DBOX_EXEC if no cmd given)
+    -i, --info          Show container information
+    -S, --stop          Stop the container
+    -c, --clean         Remove the container
 EOF
 }
 
