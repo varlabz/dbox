@@ -1,0 +1,25 @@
+#!/usr/bin/env -S dbox -f
+
+# https://github.com/varlabz/dbox
+# dbox - lightweight Docker sandbox manager
+# Config file format (shell variables):
+#   DBOX_CONTAINER=<name>    # container name (optional).
+#   DBOX_IMAGE=<image>       # Docker image to use (optional).
+#   DBOX_DIR=<path>          # host path mounted as working directory (optional).
+#   DBOX_MOUNT=("host_path:container_path" ...) # optional extra mounts (optional)
+#   DBOX_PARAM=              # optional extra Docker run parameters (optional).
+#   DBOX_ENV=(KEY=val ...)   # optional extra environment variables (optional)
+#   DBOX_INIT=("cmd1" ...)   # optional commands to run after container creation (optional)
+#   DBOX_EXEC=<cmd>          # default command for `dbox -e` with no args (optional)
+
+DBOX_IMAGE="node:alpine"
+DBOX_MOUNT=(
+    "$HOME/.pi:/root/.pi:rw"
+)
+DBOX_INIT=(
+    "apk update --no-cache"
+    "apk add --no-cache curl git bash"
+    "npm install -g npm@latest"
+    "npm install -g little-coder"
+)
+DBOX_EXEC="little-coder"
