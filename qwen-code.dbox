@@ -14,6 +14,7 @@
 
 DBOX_IMAGE="node:alpine"
 DBOX_MOUNT=(
+    "$HOME/.agents:/root/.agents:ro"
     "$HOME/.qwen:/root/.qwen:rw"
 )
 DBOX_INIT=(
