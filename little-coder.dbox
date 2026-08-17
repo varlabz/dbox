@@ -14,12 +14,12 @@
 
 DBOX_IMAGE="node:alpine"
 DBOX_MOUNT=(
-    "$HOME/.pi:/root/.pi:rw"
-)
+    "$HOME/.config/little-coder:/root/.config/little-coder:rw"
+ 
 DBOX_INIT=(
     "apk update --no-cache"
     "apk add --no-cache curl git bash"
     "npm install -g npm@latest"
-    "npm install -g little-coder"
+    "npm install -g little-coder --allow-scripts=@google/genai,protobufjs"
 )
 DBOX_EXEC="little-coder"
