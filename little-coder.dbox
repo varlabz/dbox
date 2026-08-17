@@ -15,7 +15,7 @@
 DBOX_IMAGE="node:alpine"
 DBOX_MOUNT=(
     "$HOME/.config/little-coder:/root/.config/little-coder:rw"
- 
+)
 DBOX_INIT=(
     "apk update --no-cache"
     "apk add --no-cache curl git bash"
