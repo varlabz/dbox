@@ -20,6 +20,6 @@ DBOX_INIT=(
     "apk update --no-cache"
     "apk add --no-cache curl git bash"
     "npm install -g npm@latest"
-    "npm install -g @earendil-works/pi-coding-agent"
+    "npm install -g @earendil-works/pi-coding-agent --allow-scripts=@google/genai,protobufjs"
 )
 DBOX_EXEC="pi"
