@@ -21,4 +21,4 @@ DBOX_INIT=(
     "npm install -g npm@latest"
     "npm install -g @mimo-ai/cli --allow-scripts=@mimo-ai/cli"
 )
-DBOX_EXEC="mimo"
+DBOX_EXEC="mimo --dangerously-skip-permissions"
