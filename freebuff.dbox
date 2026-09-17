@@ -13,6 +13,9 @@
 #   DBOX_EXEC=<cmd>          # default command for `dbox -e` with no args (optional)
 
 DBOX_IMAGE="node:26-bookworm-slim"
+DBOX_MOUNT=(
+    "${HOME}/.config/manicode:/root/.config/manicode:rw"
+)
 DBOX_INIT=(
     "apt-get update && apt-get install -y curl git bash"
     "npm install -g npm@latest"
